@@ -1,0 +1,14 @@
+.a{
+    color: red;
+    list-style-type: square;
+   }
+
+   .imagePath{
+
+    height:500;
+    width: 600;
+   }
+
+   .paragraph{
+    background-image: url('IMG_20220315_232752.jpg');
+   }
