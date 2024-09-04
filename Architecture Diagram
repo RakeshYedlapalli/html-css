@@ -96,3 +96,55 @@ Diagram
    | +-----------+ +-----------+ |
    |   Table 1      |   Table 2   |   ... (Tables below each tab)
    +-----------------------------+
+[11:00, 04/09/2024] Saurabh CACIB: 3. Data Population for Program Tabs (with Pagination)
+
+Overview
+
+When a program tab is clicked within the expanded view of a tile (Todos, Recent Events, Upcoming Events), an API call is triggered to retrieve the full data set for that specific program. This data is then used to populate the table within the selected program tab. The data is displayed in a paginated format, with pagination handled on the front end.
+
+Flow Details
+
+	1.	Initial Load:
+	•	By default, when the Todos tile expands, the first program’s data is automatically displayed using the API call made for that program.
+	2.	Tab Click Event:
+	•	When a user clicks on a program tab, an API call is made to retrieve the full data for the selected program, including the program ID.
+	3.	Paginated Table:
+	•	The data retrieved from the API is displayed in a paginated format. The front-end handles the pagination logic, so only a subset of data (e.g., 10 rows per page) is shown at a time.
+	•	The user can navigate through pages of data without making additional API calls.
+	4.	Data Population:
+	•	Once the API returns the data for the program, the corresponding table is populated with columns of data.
+	•	Pagination controls allow the user to view different sets of data within the table.
+
+API Interaction Flow
+
+	•	GET Request for Program Data:
+	•	When a program tab is selected, a specific API call is made to fetch data for that program: GET /api/program/{programID}/data.
+	•	The data is comprehensive and used to populate the paginated table for that program.
+
+Data Flow for Program Tab Selection with Pagination:
+
+	1.	Tab Click: User clicks on a program tab.
+	2.	API Request: The application sends a request with the program ID.
+	3.	Data Retrieval: The API responds with detailed data for the program.
+	4.	Table Update: The program-specific table is populated with paginated data.
+	5.	Pagination Control: Users can navigate between pages of data on the front end, which controls the pagination logic.
+
+Diagram
+[11:01, 04/09/2024] Saurabh CACIB: +-----------------------------+             +---------------------+
+   |         Home Page            |             |     API Server      |
+   +-----------------------------+             +---------------------+
+   |                             |             |                     |
+   |  +----------------------+   |             | /api/program/{id}/data|
+   |  |    Program Tab 1      |   |   GET       |                     |
+   |  +----------------------+   |<----------->|                     |
+   |                             |             |                     |
+   |  +----------------------+   |             |                     |
+   |  |    Program Tab 2      |   |             |                     |
+   |  +----------------------+   |             |                     |
+   +-----------------------------+             +---------------------+
+
+   +-----------------------------+
+   |   Table for Program 1        |
+   |   Paginated (10 rows/page)   |
+   |   [Pagination Controls]      |
+   +-----------------------------+
