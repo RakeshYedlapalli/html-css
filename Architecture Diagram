@@ -1,0 +1,49 @@
+Great! Here’s how we can outline the first section of your document:
+
+---
+
+## 1. Homepage - Tiles Section
+
+### Overview
+The homepage is divided into three primary tiles that display event counts:
+1. *Todos Events*
+2. *Recent Events*
+3. *Upcoming Events*
+
+Each tile dynamically updates based on data fetched from respective API calls when the homepage loads. The counts represent the current state of events for the user.
+
+### API Interaction Flow
+
+- *Todos Events Tile*: Calls GET /api/todos/count to retrieve the number of todos.
+- *Recent Events Tile*: Calls GET /api/events/recent/count for recent events count.
+- *Upcoming Events Tile*: Calls GET /api/events/upcoming/count to get upcoming events count.
+
+### Data Flow
+1. *On Page Load*: When the homepage is initialized, all three API calls are triggered simultaneously.
+2. *API Response Handling*: Once data is retrieved from each API, the respective tile displays the count.
+
+### Diagram
+The following diagram represents the interaction between the homepage and the APIs:
+
+*Homepage Tiles with API Interaction*
+
+plaintext
+   +-----------------------------+             +---------------------+
+   |         Home Page            |             |     API Server      |
+   +-----------------------------+             +---------------------+
+   |                             |             |                     |
+   |  +----------------------+   |   GET       |   /api/todos/count  |
+   |  |   Todos Events Tile   |<-------------->|   /api/events/recent/count  |
+   |  +----------------------+   |             |   /api/events/upcoming/count|
+   |                             |             |                     |
+   |  +----------------------+   |             |                     |
+   |  |  Recent Events Tile   |   |             |                     |
+   |  +----------------------+   |             |                     |
+   |                             |             |                     |
+   |  +----------------------+   |             |                     |
+   |  |Upcoming Events Tile   |   |             |                     |
+   |  +----------------------+   |             |                     |
+   +-----------------------------+             +---------------------+
+
+
+Let me know how this looks so far! I’ll wait for the next step to continue.
