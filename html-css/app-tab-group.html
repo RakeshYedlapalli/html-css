@@ -1,0 +1,172 @@
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { LnscGlobalLayoutService } from '@lnsc/material/layout';
+import { TaskTileComponent } from 'src/app/shared/components/task-tile/task-tile.component';
+import { LnscTabComponent, LnscTabGroupComponent } from '@lnsc/material/tabs';
+import { HomeService } from 'src/app/core/service/feature/home.service';
+import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { UserService } from 'src/app/core/service/feature/user.service';
+import { EventProgramCounts } from 'src/app/core/model/home/event-tiles-count.model';
+import { CoreService } from 'src/app/core/core.service';
+import { TodoEventsListComponent } from './todo-list/todo-events-list.component';
+import { RecentEventsListComponent } from './recent-events-list/recent-events-list.component';
+import { UpcomingEventsListComponent } from './upcoming-events-list/upcoming-events-list.component';
+import { LoanscapeMergedIconId } from '@lnsc/material/icon/models';
+
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss'],
+  standalone: true,
+  imports: [
+    TaskTileComponent,
+    LnscTabGroupComponent,
+    LnscTabComponent,
+    RecentEventsListComponent,
+    UpcomingEventsListComponent,
+    TodoEventsListComponent,
+    NgClass,
+    NgIf,
+    NgFor,
+    AsyncPipe
+  ],
+})
+export class HomeComponent implements OnInit {
+
+  public eventTypes = [
+    { key: 'todos', title: 'To Do', iconName: 'time-calendar' as LoanscapeMergedIconId, cssClass: 'col-md-3 card-task', isSelected: true },
+    { key: 'recentEvents', title: 'Recent Events', iconName: 'time-calendar' as LoanscapeMergedIconId, cssClass: 'col-md-3 card-task', isSelected: false },
+    { key: 'upcomingevents', title: 'Upcoming Events', iconName: 'time-upcoming-activity' as LoanscapeMergedIconId, cssClass: 'col-md-3 card-task', isSelected: false },
+  ];
+
+  selectedEventType = 'todos';
+  activeTabIndex = 0;
+  eventsCountByEvent = new Map<string, EventProgramCounts>();
+  isTabLoading = false;
+
+  constructor(
+    private homeService: HomeService,
+    private layoutService: LnscGlobalLayoutService,
+    private userService: UserService,
+    private coreService: CoreService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.layoutService.setSubHeaderInfo({
+      label: '',
+      value: 'Welcome ' + this.userService.user.firstName,
+    });
+    this.subscribeToInvestorSelector();
+    this.subscribeToEventsCountByEvent();
+    this.homeService.getEventCountByEvent(this.coreService.selectedInvestorId);
+  }
+
+  private subscribeToInvestorSelector() {
+    this.coreService.selectedInvestor$.subscribe((investorId: number) => {
+      if (investorId) {
+        this.isTabLoading = true;
+        this.homeService.clearCache();
+        this.homeService.getEventCountByEvent(investorId);
+      }
+    });
+  }
+
+  private subscribeToEventsCountByEvent() {
+    this.homeService.eventsResponseData$.subscribe((data: Map<string, EventProgramCounts>) => {
+      this.eventsCountByEvent = data;
+      this.cdr.detectChanges();
+      this.isTabLoading = false;
+    });
+  }
+
+  highlightSelected(selectedType: string) {
+    this.eventTypes.forEach(eventType => eventType.isSelected = eventType.key === selectedType);
+    this.activeTabIndex = 0;
+    this.selectedEventType = selectedType;
+  }
+
+  onTabChange(index: number) {
+    this.activeTabIndex = index;
+  }
+}
+
+
+
+
+
+<div class="container">
+  <div class="row align-left">
+    <app-task-tile
+      *ngFor="let eventType of eventTypes"
+      (click)="highlightSelected(eventType.key)"
+      [class]="eventType.cssClass"
+      [ngClass]="{ 'apply-css-styles': eventType.isSelected }"
+      [iconName]="eventType.iconName"
+      [notificationCount]="eventsCountByEvent.get(eventType.key)?.totalCount"
+      [title]="eventType.title"
+    ></app-task-tile>
+  </div>
+
+  <ng-container [ngSwitch]="selectedEventType">
+    <app-tab-group
+      *ngSwitchCase="'todos'"
+      [eventData]="eventsCountByEvent.get('todos')?.programs"
+      [activeTabIndex]="activeTabIndex"
+      (tabChange)="onTabChange($event)"
+      [tabComponent]="app-todo-custom-table-ui"
+      [isLoading]="isTabLoading"
+    ></app-tab-group>
+
+    <app-tab-group
+      *ngSwitchCase="'recentEvents'"
+      [eventData]="eventsCountByEvent.get('recentEvents')?.programs"
+      [activeTabIndex]="activeTabIndex"
+      (tabChange)="onTabChange($event)"
+      [tabComponent]="app-recent-events-list"
+      [isLoading]="isTabLoading"
+    ></app-tab-group>
+
+    <app-tab-group
+      *ngSwitchCase="'upcomingevents'"
+      [eventData]="eventsCountByEvent.get('upcomingevents')?.programs"
+      [activeTabIndex]="activeTabIndex"
+      (tabChange)="onTabChange($event)"
+      [tabComponent]="app-upcoming-events-list"
+      [isLoading]="isTabLoading"
+    ></app-tab-group>
+  </ng-container>
+</div>
+
+
+
+
+
+@Component({
+  selector: 'app-tab-group',
+  template: `
+    <lnsc-tab-group [(selectedIndex)]="activeTabIndex" (selectedIndexChange)="onTabChange($event)" *ngIf="!isLoading">
+      <lnsc-tab *ngFor="let inv of eventData; let i = index" [notifications]="inv.count" [label]="inv.name">
+        <ng-container *ngIf="activeTabIndex === i">
+          <ng-container *ngComponentOutlet="tabComponent; injector: createInjector(inv)"></ng-container>
+        </ng-container>
+      </lnsc-tab>
+    </lnsc-tab-group>
+  `,
+  standalone: true,
+  imports: [LnscTabGroupComponent, LnscTabComponent, NgFor, NgIf],
+})
+export class TabGroupComponent {
+  @Input() eventData: Program[];
+  @Input() activeTabIndex: number;
+  @Input() tabComponent: any;
+  @Input() isLoading: boolean;
+  @Output() tabChange = new EventEmitter<number>();
+
+  onTabChange(index: number) {
+    this.tabChange.emit(index);
+  }
+
+  createInjector(inv: Program): Injector {
+    return Injector.create({ providers: [{ provide: Program, useValue: inv }] });
+  }
+}
